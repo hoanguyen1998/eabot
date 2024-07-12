@@ -15,22 +15,32 @@
 #property strict
 
 static input string _Properties_ = "------"; // --- Expert Properties ---
-static input int    Magic_Number = 766881408; // Magic number
+static input int    Magic_Number = 1815847645; // Magic number
 static input double Entry_Amount =     0.01; // Entry lots
-       input int    Stop_Loss    =     1915; // Stop Loss   (pips)
-       input int    Take_Profit  =     4853; // Take Profit (pips)
+       input int    Stop_Loss    =     4569; // Stop Loss   (pips)
+       input int    Take_Profit  =     4718; // Take Profit (pips)
 
-static input string ___0______   = "------"; // --- Bears Power ---
-       input int    Ind0Param0   =       26; // Period
-       input double Ind0Param1   =   0.0000; // Level
+static input string ___0______   = "------"; // --- Williams' Percent Range ---
+       input int    Ind0Param0   =        8; // Period
+       input double Ind0Param1   =    -15.0; // Level
 
-static input string ___1______   = "------"; // --- Candle Color ---
-       input int    Ind1Param0   =        7; // Min body height [pips]
-       input int    Ind1Param1   =        5; // Consecutive candles
+static input string ___1______   = "------"; // --- Average True Range ---
+       input int    Ind1Param0   =       45; // Period
+       input double Ind1Param1   =  11.1000; // Level
 
-static input string ___2______   = "------"; // --- DeMarker ---
-       input int    Ind2Param0   =       10; // Period
-       input double Ind2Param1   =     0.02; // Level
+static input string ___2______   = "------"; // --- Stochastic ---
+       input int    Ind2Param0   =       17; // %K Period
+       input int    Ind2Param1   =       13; // %D Period
+       input int    Ind2Param2   =        4; // Slowing
+       input double Ind2Param3   =     83.0; // Level
+
+static input string ___3______   = "------"; // --- Moving Averages Crossover ---
+       input int    Ind3Param0   =       20; // Fast MA period
+       input int    Ind3Param1   =       46; // Slow MA period
+
+static input string ___4______   = "------"; // --- Awesome Oscillator ---
+       input double Ind4Param0   =  18.6000; // Level
+
 
 static input string Entry_prot__ = "------"; // --- Entry Protections ---
 static input int    Max_Spread   =        0; // Max spread (points)
@@ -291,15 +301,24 @@ void UpdatePosition(void)
 //+------------------------------------------------------------------+
 void InitIndicators(void)
   {
-   // Bears Power (26)
-   indHandlers[0][0][0] = iBearsPower(NULL, 0, Ind0Param0);
+   // Williams' Percent Range (8), Level: -15.0
+   indHandlers[0][0][0] = iWPR(NULL, 0, Ind0Param0);
    if(Show_inds) ChartIndicatorAdd(0, 1, indHandlers[0][0][0]);
-   // Candle Color (7, 5)
-   indHandlers[0][1][0] = -1;
-   if(Show_inds) ChartIndicatorAdd(0, 0, indHandlers[0][1][0]);
-   // DeMarker (10), Level: 0.02
-   indHandlers[0][2][0] = iDeMarker(NULL, 0, Ind2Param0);
-   if(Show_inds) ChartIndicatorAdd(0, 2, indHandlers[0][2][0]);
+   // Average True Range (45), Level: 11.1000
+   indHandlers[0][1][0] = iATR(NULL, 0, Ind1Param0);
+   if(Show_inds) ChartIndicatorAdd(0, 2, indHandlers[0][1][0]);
+   // Stochastic (17, 13, 4), Level: 83.0
+   indHandlers[0][2][0] = iStochastic(NULL, 0, Ind2Param0, Ind2Param1, Ind2Param2, MODE_SMA, 0);
+   if(Show_inds) ChartIndicatorAdd(0, 3, indHandlers[0][2][0]);
+   // Moving Averages Crossover (Simple, Simple, 20, 46)
+   indHandlers[0][3][0] = iMA(NULL, 0, Ind3Param0, 0, MODE_SMA, PRICE_CLOSE);
+   if(Show_inds) ChartIndicatorAdd(0, 0, indHandlers[0][3][0]);
+   // Moving Averages Crossover (Simple, Simple, 20, 46)
+   indHandlers[0][3][1] = iMA(NULL, 0, Ind3Param1, 0, MODE_SMA, PRICE_CLOSE);
+   if(Show_inds) ChartIndicatorAdd(0, 0, indHandlers[0][3][1]);
+   // Awesome Oscillator, Level: 18.6000
+   indHandlers[0][4][0] = iAO(NULL, 0);
+   if(Show_inds) ChartIndicatorAdd(0, 4, indHandlers[0][4][0]);
   }
 //+------------------------------------------------------------------+
 //|                                                                  |
@@ -324,34 +343,27 @@ void RemoveIndicators(void)
 //+------------------------------------------------------------------+
 int GetEntrySignal(void)
   {
-   // Bears Power (26)
+   // Williams' Percent Range (8), Level: -15.0
    double ind0buffer[]; CopyBuffer(indHandlers[0][0][0], 0, 1, 3, ind0buffer);
    double ind0val1  = ind0buffer[2];
    double ind0val2  = ind0buffer[1];
-   double ind0val3  = ind0buffer[0];
-   bool   ind0long  = ind0val1 > ind0val2 + sigma && ind0val2 < ind0val3 - sigma;
-   bool   ind0short = ind0val1 < ind0val2 - sigma && ind0val2 > ind0val3 + sigma;
+   bool   ind0long  = ind0val1 > Ind0Param1 + sigma && ind0val2 < Ind0Param1 - sigma;
+   bool   ind0short = ind0val1 < -100 - Ind0Param1 - sigma && ind0val2 > -100 - Ind0Param1 + sigma;
 
-   // Candle Color (7, 5)
-   bool ind1long  = false;
-   bool ind1short = false;
-   {
-      int consecutiveBullish = 0;
-      int consecutiveBearish = 0;
-      double pipVal = pip * Ind1Param0;
+   // Average True Range (45), Level: 11.1000
+   double ind1buffer[]; CopyBuffer(indHandlers[0][1][0], 0, 1, 3, ind1buffer);
+   double ind1val1  = ind1buffer[2];
+   bool   ind1long  = ind1val1 < Ind1Param1 - sigma;
+   bool   ind1short = ind1long;
 
-      for (int b = Ind1Param1 + 2; b > 0; b--)
-        {
-         consecutiveBullish = Close(b) - Open(b) >= pipVal ? consecutiveBullish + 1 : 0;
-         consecutiveBearish = Open(b) - Close(b) >= pipVal ? consecutiveBearish + 1 : 0;
-        }
+   // Stochastic (17, 13, 4), Level: 83.0
+   double ind2buffer[]; CopyBuffer(indHandlers[0][2][0], MAIN_LINE, 1, 3, ind2buffer);
+   double ind2val1  = ind2buffer[2];
+   bool   ind2long  = ind2val1 > Ind2Param3 + sigma;
+   bool   ind2short = ind2val1 < 100 - Ind2Param3 - sigma;
 
-      ind1long  = consecutiveBullish >= Ind1Param1;
-      ind1short = consecutiveBearish >= Ind1Param1;
-   }
-
-   bool canOpenLong  = ind0long  && ind1long;
-   bool canOpenShort = ind0short && ind1short;
+   bool canOpenLong  = ind0long  && ind1long  && ind2long;
+   bool canOpenShort = ind0short && ind1short && ind2short;
 
    return canOpenLong  && !canOpenShort ? OP_BUY
         : canOpenShort && !canOpenLong  ? OP_SELL
@@ -362,15 +374,25 @@ int GetEntrySignal(void)
 //+------------------------------------------------------------------+
 void ManageClose(void)
   {
-   // DeMarker (10), Level: 0.02
-   double ind2buffer[]; CopyBuffer(indHandlers[0][2][0], 0, 1, 3, ind2buffer);
-   double ind2val1  = ind2buffer[2];
-   double ind2val2  = ind2buffer[1];
-   bool   ind2long  = ind2val1 > Ind2Param1 + sigma && ind2val2 < Ind2Param1 - sigma;
-   bool   ind2short = ind2val1 < 1 - Ind2Param1 - sigma && ind2val2 > 1 - Ind2Param1 + sigma;
+   // Moving Averages Crossover (Simple, Simple, 20, 46)
+   double ind3buffer0[]; CopyBuffer(indHandlers[0][3][0], 0, 1, 2, ind3buffer0);
+   double ind3buffer1[]; CopyBuffer(indHandlers[0][3][1], 0, 1, 2, ind3buffer1);
+   double ind3val1  = ind3buffer0[1];
+   double ind3val2  = ind3buffer1[1];
+   double ind3val3  = ind3buffer0[0];
+   double ind3val4  = ind3buffer1[0];
+   bool   ind3long  = ind3val1 > ind3val2 + sigma && ind3val3 < ind3val4 - sigma;
+   bool   ind3short = ind3val1 < ind3val2 - sigma && ind3val3 > ind3val4 + sigma;
 
-   if( (posType == OP_BUY  && ind2long) ||
-        (posType == OP_SELL && ind2short) )
+   // Awesome Oscillator, Level: 18.6000
+   double ind4buffer[]; CopyBuffer(indHandlers[0][4][0], 0, 1, 3, ind4buffer);
+   double ind4val1  = ind4buffer[2];
+   double ind4val2  = ind4buffer[1];
+   bool   ind4long  = ind4val1 > Ind4Param0 + sigma && ind4val2 < Ind4Param0 - sigma;
+   bool   ind4short = ind4val1 < -Ind4Param0 - sigma && ind4val2 > -Ind4Param0 + sigma;
+
+   if( (posType == OP_BUY  && (ind3long || ind4long)) ||
+        (posType == OP_SELL && (ind3short || ind4short)) )
       ClosePosition();
   }
 //+------------------------------------------------------------------+
@@ -1448,4 +1470,4 @@ void ParseNewsCurrenciesText()
   }
 //+------------------------------------------------------------------+
 /*STRATEGY MARKET BlackBull; XAUUSD; M15 */
-/*STRATEGY CODE {"properties":{"entryLots":0.1,"tradeDirectionMode":0,"oppositeEntrySignal":0,"stopLoss":1915,"takeProfit":4853,"useStopLoss":true,"useTakeProfit":true,"isTrailingStop":false},"openFilters":[{"name":"Bears Power","listIndexes":[6,0,0,0,0],"numValues":[26,0,0,0,0,0]},{"name":"Candle Color","listIndexes":[0,0,0,0,0],"numValues":[7,5,0,0,0,0]}],"closeFilters":[{"name":"DeMarker","listIndexes":[4,0,0,0,0],"numValues":[10,0.02,0,0,0,0]}]} */
+/*STRATEGY CODE {"properties":{"entryLots":0.1,"tradeDirectionMode":0,"oppositeEntrySignal":0,"stopLoss":4569,"takeProfit":4718,"useStopLoss":true,"useTakeProfit":true,"isTrailingStop":false},"openFilters":[{"name":"Williams' Percent Range","listIndexes":[4,0,0,0,0],"numValues":[8,-15,0,0,0,0]},{"name":"Average True Range","listIndexes":[3,0,0,0,0],"numValues":[45,11.1,0,0,0,0]},{"name":"Stochastic","listIndexes":[2,0,0,0,0],"numValues":[17,13,4,83,0,0]}],"closeFilters":[{"name":"Moving Averages Crossover","listIndexes":[0,0,0,0,0],"numValues":[20,46,0,0,0,0]},{"name":"Awesome Oscillator","listIndexes":[4,0,0,0,0],"numValues":[18.6,0,0,0,0,0]}]} */
