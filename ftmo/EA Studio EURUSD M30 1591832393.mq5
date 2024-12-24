@@ -15,56 +15,45 @@
  * Only risk capital should be used for trading and only those with sufficient risk capital should consider trading.
  */
 
-#property copyright "Forex Software Ltd."
-#property version   "6.2"
+// Expert Advisor for MT5
+//
+// Created by: EA Trading Academy
+// Website   : https://eatradingacademy.com
+//
+// Risk Disclosure
+//
+// Futures and forex trading contains substantial risk and is not for every investor.
+// An investor could potentially lose all or more than the initial investment.
+// Risk capital is money that can be lost without jeopardizing ones’ financial security or life style.
+// Only risk capital should be used for trading and only those with sufficient risk capital should consider trading.
+
+#property copyright "EA Trading Academy"
+#property version   "6.1"
 #property strict
 
 static input string _Properties_ = "------"; // --- Expert Properties ---
-static input int    Magic_Number = 1591832393; // Magic number
-static input double Entry_Amount =     0.19; // Entry lots
-       input int    Stop_Loss    =       50; // Stop Loss   (pips)
-       input int    Take_Profit  =       55; // Take Profit (pips)
+static input int    Magic_Number = 1627545140; // Magic number
+static input double Entry_Amount =     0.01; // Entry lots
+       input int    Stop_Loss    =     2290; // Stop Loss   (pips)
+       input int    Take_Profit  =     2935; // Take Profit (pips)
 
-static input string ___0______   = "------"; // --- Entry Time ---
-       input int    Ind0Param0   =        2; // From hour
-       input int    Ind0Param1   =        0; // From minute
-       input int    Ind0Param2   =       23; // Until hour
-       input int    Ind0Param3   =       30; // Until minute
+static input string ___0______   = "------"; // --- Envelopes ---
+       input int    Ind0Param0   =       30; // Period
+       input double Ind0Param1   =     0.91; // Deviation %
 
-static input string ___1______   = "------"; // --- Envelopes ---
-       input int    Ind1Param0   =        7; // Period
-       input double Ind1Param1   =     0.09; // Deviation %
+static input string ___1______   = "------"; // --- Awesome Oscillator ---
+       input double Ind1Param0   =  33.9000; // Level
 
-static input string ___2______   = "------"; // --- DeMarker ---
-       input int    Ind2Param0   =       35; // Period
-       input double Ind2Param1   =     0.50; // Level
-
-static input string ___3______   = "------"; // --- MACD ---
-       input int    Ind3Param0   =        8; // Fast EMA
-       input int    Ind3Param1   =       25; // Slow EMA
-       input int    Ind3Param2   =        9; // MACD SMA
-
-static input string ___4______   = "------"; // --- RSI ---
-       input int    Ind4Param0   =        6; // Period
-       input int    Ind4Param1   =       50; // Level
-
-static input string ___5______   = "------"; // --- RSI ---
-       input int    Ind5Param0   =       20; // Period
-       input int    Ind5Param1   =       30; // Level
-
-static input string ___6______   = "------"; // --- Average True Range ---
-       input int    Ind6Param0   =       39; // Period
-       input double Ind6Param1   =   0.0010; // Level
 
 static input string Entry_prot__ = "------"; // --- Entry Protections ---
 static input int    Max_Spread   =        0; // Max spread (points)
-static input int    Max_OpenPos  =        0; // Max open positions (all experts)
-static input double Max_OpenLots =     0.00; // Max open lots (all experts)
+static input int    Max_OpenPos  =        0; // Max open positions
+static input double Max_OpenLots =     0.00; // Max open lots
 
 static input string Daily_prot__ = "------"; // --- Daily Protections ---
 static input int    MaxDailyLoss =        0; // Maximum daily loss (currency)
 static input double Max_Daily_DD =     0.00; // Maximum daily drawdown %
-static input int    Daily_Reset  =        0; // Daily reset hour (terminal time)
+static input int    Daily_Reset  =        0; // Daily reset hour (Terminal)
 
 static input string Account_prot = "------"; // --- Account Protections ---
 static input int    Min_Equity   =        0; // Minimum equity (currency)
@@ -79,7 +68,7 @@ enum NewsFilterPriority
    NewsFilter_HighAndMedium // Medium and High news filter
   };
 static input NewsFilterPriority News_Priority = NewsFilter_Disabled;       // News priority
-static input string News_Currencies   = "EUR,USD"; // News currencies
+static input string News_Currencies   = "USD"; // News currencies
 static input int    News_BeforeMedium =  2; // Before Medium news (minutes)
 static input int    News_AfterMedium  =  2; // After Medium news (minutes)
 static input int    News_BeforeHigh   =  2; // Before High news (minutes)
@@ -91,7 +80,7 @@ static input bool   Show_inds    =    false; // Show indicators
 
 static input string __Stats_____ = "------"; // --- Stats ---
 static input bool   Pos_Stat     =     true; // Position stats
-static input bool   Robot_Stats  =     true; // Trading stats
+static input bool   Robot_Stats  =     true; // Robot stats
 
 #define TRADE_RETRY_COUNT   4
 #define TRADE_RETRY_WAIT  100
@@ -99,18 +88,18 @@ static input bool   Robot_Stats  =     true; // Trading stats
 #define OP_BUY            ORDER_TYPE_BUY
 #define OP_SELL           ORDER_TYPE_SELL
 
-string robotTagline  = "An Expert Advisor from Expert Advisor Studio";
+string robotTagline  = "Robot by EA Trading Academy";
 
 // Session time is set in seconds from 00:00
-const int  sessionSundayOpen          =     0; // 00:00
-const int  sessionSundayClose         = 86400; // 24:00
-const int  sessionMondayThursdayOpen  =     0; // 00:00
-const int  sessionMondayThursdayClose = 86400; // 24:00
-const int  sessionFridayOpen          =     0; // 00:00
-const int  sessionFridayClose         = 86400; // 24:00
-const bool sessionIgnoreSunday        = false;
-const bool sessionCloseAtSessionClose = false;
-const bool sessionCloseAtFridayClose  = false;
+int  sessionSundayOpen          =     0; // 00:00
+int  sessionSundayClose         = 86400; // 24:00
+int  sessionMondayThursdayOpen  =     0; // 00:00
+int  sessionMondayThursdayClose = 86400; // 24:00
+int  sessionFridayOpen          =     0; // 00:00
+int  sessionFridayClose         = 86400; // 24:00
+bool sessionIgnoreSunday        = false;
+bool sessionCloseAtSessionClose = false;
+bool sessionCloseAtFridayClose  = false;
 
 const double sigma = 0.000001;
 
@@ -177,9 +166,6 @@ int OnInit(void)
    isTrailingStop  = isTrailingStop && Stop_Loss > 0;
    lastStatsUpdate = 0;
 
-   accountProtectionMessage = "";
-   entryProtectionMessage   = "";
-
    InitGlobalVariables();
    InitIndicators();
    UpdatePosition();
@@ -222,7 +208,7 @@ void OnTick(void)
       if(time > lastStatsUpdate + 3)
         {
          lastStatsUpdate = time;
-         if(Max_OpenPos > sigma || Max_OpenLots > sigma)
+         if(Max_OpenPos || Max_OpenLots)
             SetPosStats();
 
          UpdateStats();
@@ -266,28 +252,12 @@ void OnBar(void)
 
    if(posType != OP_FLAT && isTrailingStop)
      {
-      const double trailingStop = GetTrailingStopPrice();
+      double trailingStop=GetTrailingStopPrice();
       ManageTrailingStop(trailingStop);
       UpdatePosition();
      }
 
    int entrySignal = GetEntrySignal();
-
-   if ((posType == OP_BUY  && entrySignal == OP_SELL) ||
-       (posType == OP_SELL && entrySignal == OP_BUY ))
-     {
-      ClosePosition();
-
-      // Hack to prevent MT bug https://forexsb.com/forum/post/73434/#p73434
-      int repeatCount = 80;
-      int delay       = 50;
-      for (int i = 0; i < repeatCount; i++)
-      {
-         UpdatePosition();
-         if (posType == OP_FLAT) break;
-         Sleep(delay);
-      }
-     }
 
    if(posType == OP_FLAT && entrySignal != OP_FLAT)
      {
@@ -334,27 +304,12 @@ void UpdatePosition(void)
 //+------------------------------------------------------------------+
 void InitIndicators(void)
   {
-   // Entry Time (2, 0, 23, 30)
-   indHandlers[0][0][0] = -1;
+   // Envelopes (Close, Simple, 30, 0.91)
+   indHandlers[0][0][0] = iEnvelopes(NULL, 0, Ind0Param0, 0, MODE_SMA, PRICE_CLOSE, Ind0Param1);
    if(Show_inds) ChartIndicatorAdd(0, 0, indHandlers[0][0][0]);
-   // Envelopes (Close, Simple, 7, 0.09)
-   indHandlers[0][1][0] = iEnvelopes(NULL, 0, Ind1Param0, 0, MODE_SMA, PRICE_CLOSE, Ind1Param1);
-   if(Show_inds) ChartIndicatorAdd(0, 0, indHandlers[0][1][0]);
-   // DeMarker (35), Level: 0.50
-   indHandlers[0][2][0] = iDeMarker(NULL, 0, Ind2Param0);
-   if(Show_inds) ChartIndicatorAdd(0, 1, indHandlers[0][2][0]);
-   // MACD (Close, 8, 25, 9)
-   indHandlers[0][3][0] = iMACD(NULL, 0, Ind3Param0, Ind3Param1, Ind3Param2, PRICE_CLOSE);
-   if(Show_inds) ChartIndicatorAdd(0, 2, indHandlers[0][3][0]);
-   // RSI (Close, 6), Level: 50
-   indHandlers[0][4][0] = iRSI(NULL, 0, Ind4Param0, PRICE_CLOSE);
-   if(Show_inds) ChartIndicatorAdd(0, 3, indHandlers[0][4][0]);
-   // RSI (Close, 20)
-   indHandlers[0][5][0] = iRSI(NULL, 0, Ind5Param0, PRICE_CLOSE);
-   if(Show_inds) ChartIndicatorAdd(0, 4, indHandlers[0][5][0]);
-   // Average True Range (39), Level: 0.0010
-   indHandlers[0][6][0] = iATR(NULL, 0, Ind6Param0);
-   if(Show_inds) ChartIndicatorAdd(0, 5, indHandlers[0][6][0]);
+   // Awesome Oscillator, Level: 33.9000
+   indHandlers[0][1][0] = iAO(NULL, 0);
+   if(Show_inds) ChartIndicatorAdd(0, 1, indHandlers[0][1][0]);
   }
 //+------------------------------------------------------------------+
 //|                                                                  |
@@ -379,62 +334,18 @@ void RemoveIndicators(void)
 //+------------------------------------------------------------------+
 int GetEntrySignal(void)
   {
-   // Entry Time (2, 0, 23, 30)
+   // Envelopes (Close, Simple, 30, 0.91)
+   double ind0buffer0[]; CopyBuffer(indHandlers[0][0][0], 0, 1, 2, ind0buffer0);
+   double ind0buffer1[]; CopyBuffer(indHandlers[0][0][0], 1, 1, 2, ind0buffer1);
+   double ind0upBand1 = ind0buffer0[1];
+   double ind0dnBand1 = ind0buffer1[1];
+   double ind0upBand2 = ind0buffer0[0];
+   double ind0dnBand2 = ind0buffer1[0];
+   bool   ind0long    = Open(0) < ind0upBand1 - sigma && Open(1) > ind0upBand2 + sigma;
+   bool   ind0short   = Open(0) > ind0dnBand1 + sigma && Open(1) < ind0dnBand2 - sigma;
 
-   int fromTime0  = Ind0Param0 * 3600 + Ind0Param1 * 60;
-   int untilTime0 = Ind0Param2 * 3600 + Ind0Param3 * 60;
-
-   MqlDateTime mqlTime0;
-   TimeToStruct(Time(0), mqlTime0);
-   int barMinutes0 = mqlTime0.hour * 3600 + mqlTime0.min * 60;
-
-   bool isOnTime0 = fromTime0 < untilTime0
-      ? barMinutes0 >= fromTime0 && barMinutes0 <= untilTime0
-      : barMinutes0 >= fromTime0 || barMinutes0 <= untilTime0;
-
-   bool ind0long  = isOnTime0;
-   bool ind0short = isOnTime0;
-
-
-   // Envelopes (Close, Simple, 7, 0.09)
-   double ind1buffer0[]; CopyBuffer(indHandlers[0][1][0], 0, 1, 2, ind1buffer0);
-   double ind1buffer1[]; CopyBuffer(indHandlers[0][1][0], 1, 1, 2, ind1buffer1);
-   double ind1upBand1 = ind1buffer0[1];
-   double ind1dnBand1 = ind1buffer1[1];
-   double ind1upBand2 = ind1buffer0[0];
-   double ind1dnBand2 = ind1buffer1[0];
-   bool   ind1long    = Open(0) > ind1dnBand1 + sigma && Open(1) < ind1dnBand2 - sigma;
-   bool   ind1short   = Open(0) < ind1upBand1 - sigma && Open(1) > ind1upBand2 + sigma;
-
-   // DeMarker (35), Level: 0.50
-   double ind2buffer[]; CopyBuffer(indHandlers[0][2][0], 0, 1, 3, ind2buffer);
-   double ind2val1  = ind2buffer[2];
-   bool   ind2long  = ind2val1 > Ind2Param1 + sigma;
-   bool   ind2short = ind2val1 < 1 - Ind2Param1 - sigma;
-
-   // MACD (Close, 8, 25, 9)
-   double ind3buffer[]; CopyBuffer(indHandlers[0][3][0], 0, 1, 3, ind3buffer);
-   double ind3val1  = ind3buffer[2];
-   double ind3val2  = ind3buffer[1];
-   bool   ind3long  = ind3val1 > ind3val2 + sigma;
-   bool   ind3short = ind3val1 < ind3val2 - sigma;
-
-   // RSI (Close, 6), Level: 50
-   double ind4buffer[]; CopyBuffer(indHandlers[0][4][0], 0, 1, 3, ind4buffer);
-   double ind4val1  = ind4buffer[2];
-   bool   ind4long  = ind4val1 > Ind4Param1 + sigma;
-   bool   ind4short = ind4val1 < 100 - Ind4Param1 - sigma;
-
-   // RSI (Close, 20)
-   double ind5buffer[]; CopyBuffer(indHandlers[0][5][0], 0, 1, 3, ind5buffer);
-   double ind5val1  = ind5buffer[2];
-   double ind5val2  = ind5buffer[1];
-   double ind5val3  = ind5buffer[0];
-   bool   ind5long  = ind5val1 > ind5val2 + sigma && ind5val2 < ind5val3 - sigma;
-   bool   ind5short = ind5val1 < ind5val2 - sigma && ind5val2 > ind5val3 + sigma;
-
-   bool canOpenLong  = ind0long && ind1long && ind2long && ind3long && ind4long && ind5long;
-   bool canOpenShort = ind0short && ind1short && ind2short && ind3short && ind4short && ind5short;
+   bool canOpenLong  = ind0long;
+   bool canOpenShort = ind0short;
 
    return canOpenLong  && !canOpenShort ? OP_BUY
         : canOpenShort && !canOpenLong  ? OP_SELL
@@ -445,15 +356,15 @@ int GetEntrySignal(void)
 //+------------------------------------------------------------------+
 void ManageClose(void)
   {
-   // Average True Range (39), Level: 0.0010
-   double ind6buffer[]; CopyBuffer(indHandlers[0][6][0], 0, 1, 3, ind6buffer);
-   double ind6val1  = ind6buffer[2];
-   double ind6val2  = ind6buffer[1];
-   bool   ind6long  = ind6val1 > Ind6Param1 + sigma && ind6val2 < Ind6Param1 - sigma;
-   bool   ind6short = ind6long;
+   // Awesome Oscillator, Level: 33.9000
+   double ind1buffer[]; CopyBuffer(indHandlers[0][1][0], 0, 1, 3, ind1buffer);
+   double ind1val1  = ind1buffer[2];
+   double ind1val2  = ind1buffer[1];
+   bool   ind1long  = ind1val1 > Ind1Param0 + sigma && ind1val2 < Ind1Param0 - sigma;
+   bool   ind1short = ind1val1 < -Ind1Param0 - sigma && ind1val2 > -Ind1Param0 + sigma;
 
-   if( (posType == OP_BUY  && ind6long) ||
-        (posType == OP_SELL && ind6short) )
+   if( (posType == OP_BUY  && ind1long) ||
+        (posType == OP_SELL && ind1short) )
       ClosePosition();
   }
 //+------------------------------------------------------------------+
@@ -463,10 +374,10 @@ void OpenPosition(const int command)
   {
    entryProtectionMessage = "";
    const int spread = (int)((Ask() - Bid()) / _Point);
-   if(Max_OpenPos > sigma && posStatCount >= Max_OpenPos)
+   if(Max_OpenPos  > sigma && posStatCount > Max_OpenPos)
       entryProtectionMessage += StringFormat("Protection: Max open positions: %d, current: %d\n",
                                              Max_OpenPos, posStatCount);
-   if(Max_OpenLots > sigma && posStatLots > Max_OpenLots - sigma)
+   if(Max_OpenLots > sigma && posStatLots > Max_OpenLots)
       entryProtectionMessage += StringFormat("Protection: Max open lots: %.2f, current: %.2f\n",
                                              Max_OpenLots, posStatLots);
    if(Max_Spread > sigma && spread > Max_Spread)
@@ -499,7 +410,7 @@ void OpenPosition(const int command)
    if(entryProtectionMessage != "")
      {
       entryProtectionMessage = TimeToString(TimeCurrent()) + " " +
-                               "An entry order was canceled:\n" +
+                               "Entry order was canceled:\n" +
                                entryProtectionMessage;
       return;
      }
@@ -557,7 +468,7 @@ void ManageOrderSend(int command, double lots, double stopLoss, double takeProfi
         }
 
       Sleep(TRADE_RETRY_WAIT);
-      Print("Order Send retry: " + IntegerToString(attempt + 2));
+      Print("Order Send retry no: " + IntegerToString(attempt + 2));
      }
   }
 //+------------------------------------------------------------------+
@@ -596,7 +507,7 @@ void ModifyPosition(double stopLoss, double takeProfit, ulong ticket)
         }
 
       Sleep(TRADE_RETRY_WAIT);
-      Print("Order Send retry: " + IntegerToString(attempt + 2));
+      Print("Order Send retry no: " + IntegerToString(attempt + 2));
      }
   }
 //+------------------------------------------------------------------+
@@ -608,8 +519,7 @@ bool CheckOrder(MqlTradeRequest &request)
    ZeroMemory(check);
    ResetLastError();
 
-   if(OrderCheck(request, check))
-      return true;
+   if(OrderCheck(request, check)) return true;
 
    Print("Error with OrderCheck: " + check.comment);
 
@@ -643,8 +553,7 @@ bool CheckOrder(MqlTradeRequest &request)
 //+------------------------------------------------------------------+
 double GetStopLossPrice(const int command)
   {
-   if(Stop_Loss == 0)
-      return 0;
+   if(Stop_Loss == 0) return 0;
 
    const double delta    = MathMax(pip * Stop_Loss, _Point * stopLevel);
    const double stopLoss = command == OP_BUY ? Bid() - delta : Ask() + delta;
@@ -733,7 +642,7 @@ double Ask(void)
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-datetime Time(const int bar)
+datetime Time(int bar)
   {
    datetime buffer[];
    ArrayResize(buffer, 1);
@@ -742,7 +651,7 @@ datetime Time(const int bar)
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-double Open(const int bar)
+double Open(int bar)
   {
    double buffer[];
    ArrayResize(buffer, 1);
@@ -751,7 +660,7 @@ double Open(const int bar)
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-double High(const int bar)
+double High(int bar)
   {
    double buffer[];
    ArrayResize(buffer, 1);
@@ -760,7 +669,7 @@ double High(const int bar)
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-double Low(const int bar)
+double Low(int bar)
   {
    double buffer[];
    ArrayResize(buffer, 1);
@@ -769,7 +678,7 @@ double Low(const int bar)
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-double Close(const int bar)
+double Close(int bar)
   {
    double buffer[];
    ArrayResize(buffer, 1);
@@ -812,10 +721,9 @@ int DayOfWeek(void)
 //+------------------------------------------------------------------+
 bool IsTradeContextFree(void)
   {
-   if(IsTradeAllowed())
-      return true;
+   if(IsTradeAllowed()) return true;
 
-   const uint startWait = GetTickCount();
+   uint startWait = GetTickCount();
    Print("Trade context is busy! Waiting...");
 
    while(true)
@@ -823,7 +731,7 @@ bool IsTradeContextFree(void)
       if(IsStopped())
          return false;
 
-      const uint diff = GetTickCount() - startWait;
+      uint diff = GetTickCount() - startWait;
       if(diff > 30 * 1000)
         {
          Print("The waiting limit exceeded!");
@@ -926,21 +834,27 @@ void CheckAccountProtection(void)
   {
    const double accountEquity = AccountInfoDouble(ACCOUNT_EQUITY);
 
-   if(Min_Equity > sigma && accountEquity <= Min_Equity)
+   if(Min_Equity > sigma && accountEquity < Min_Equity)
      {
-      ActivateProtection(StringFormat("Minimum equity protection activated. Equity: %.2f", accountEquity));
+      const string equityTxt = DoubleToString(accountEquity, 2);
+      const string message = "Minimum equity protection activated. Equity: " + equityTxt;
+      ActivateProtection(message);
       return;
      }
 
    if(Max_Equity > sigma && accountEquity >= Max_Equity)
      {
-      ActivateProtection(StringFormat("Maximum equity protection activated. Equity: %.2f", accountEquity));
+      const string equityTxt = DoubleToString(accountEquity, 2);
+      const string message = "Maximum equity protection activated. Equity: " + equityTxt;
+      ActivateProtection(message);
       return;
      }
 
    if(MaxEquity_DD > sigma && equityDrawdownPercent >= MaxEquity_DD)
      {
-      ActivateProtection(StringFormat("Max Equity DD protection activated! Equity DD: %.2f%%", equityDrawdownPercent));
+      const string equityDDTxt = DoubleToString(equityDrawdownPercent, 2);
+      const string message = "Max Equity DD protection activated! Equity DD: " + equityDDTxt + "%";
+      ActivateProtection(message);
       return;
      }
 
@@ -965,7 +879,7 @@ void CheckAccountProtection(void)
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-void ActivateProtection(const string message)
+void ActivateProtection(string message)
   {
    if(posType == OP_BUY || posType == OP_SELL)
       ClosePosition();
@@ -974,8 +888,8 @@ void ActivateProtection(const string message)
 
    accountProtectionMessage  = StringFormat("\n%s\nMagic number: %d\n", robotTagline, Magic_Number);
    accountProtectionMessage += message + "\n";
-   accountProtectionMessage += "The current position was closed." + "\n";
-   accountProtectionMessage += "The Expert Advisor was turned off.";
+   accountProtectionMessage += "Current position closed. ";
+   accountProtectionMessage += "Expert Advisor #" + IntegerToString(Magic_Number) + " turned off.";
    Comment(accountProtectionMessage);
    Print(accountProtectionMessage);
 
@@ -991,11 +905,10 @@ void SetPosStats(void)
    posStatCount = 0;
    posStatLots  = 0;
 
-   for(int i = PositionsTotal() - 1; i >= 0; i--)
+   for(int i = PositionsTotal() - 1; i >= 0; i -= 1)
      {
       const ulong ticket = PositionGetTicket(i);
-      if(ticket == 0 || !PositionSelectByTicket(ticket))
-         continue;
+      if(ticket == 0 || !PositionSelectByTicket(ticket)) continue;
 
       posStatCount += 1;
       posStatLots  += PositionGetDouble(POSITION_VOLUME);
@@ -1006,21 +919,21 @@ void SetPosStats(void)
 //+------------------------------------------------------------------+
 void UpdateStats(void)
   {
-   string statsInfo = StringFormat("\n%s\nMagic number: %d\n", robotTagline, Magic_Number);
+   string comment = StringFormat("\n%s\nMagic number %d\n", robotTagline, Magic_Number);
 
    if(entryProtectionMessage != "")
-      statsInfo += "\n" + entryProtectionMessage;
+      comment += "\n" + entryProtectionMessage;
    if(Pos_Stat)
-      statsInfo += GetPositionStats() + "\n";
+      comment += GetPositionStats() + "\n";
    if(Robot_Stats)
-      statsInfo += GetRobotStats() + "\n";
-   if(Max_Spread   > sigma || Max_OpenPos > sigma || Max_OpenLots > sigma || MaxDailyLoss > sigma ||
-      Max_Daily_DD > sigma || Min_Equity  > sigma || Max_Equity   > sigma || MaxEquity_DD > sigma)
-      statsInfo += GetProtectionInfo();
+      comment += GetRobotStats() + "\n";
+   if(Max_Spread || Max_OpenPos || Max_OpenLots || MaxDailyLoss || Max_Daily_DD ||
+      Min_Equity || Max_Equity  || MaxEquity_DD)
+      comment += GetProtectionInfo();
    if(News_Priority != NewsFilter_Disabled)
-      statsInfo += GetNewsText() + "\n";
+      comment += GetNewsText() + "\n";
 
-   RenderStats(statsInfo);
+   RenderStats(comment);
   }
 //+------------------------------------------------------------------+
 //|                                                                  |
@@ -1029,28 +942,28 @@ string GetProtectionInfo(void)
   {
    string protectionInfo = "\n            ..:: Active Protections ::..\n";
 
-   if(Max_Spread > sigma)
+   if(Max_Spread)
       protectionInfo += StringFormat("Max spread: %d, current: %d\n",
                                      Max_Spread, (int)MathRound((Ask() - Bid()) / _Point));
-   if(Max_OpenPos > sigma)
+   if(Max_OpenPos)
       protectionInfo += StringFormat("Max open positions: %d, current: %d\n",
                                      Max_OpenPos, posStatCount);
-   if(Max_OpenLots > sigma)
+   if(Max_OpenLots)
       protectionInfo += StringFormat("Max open lots: %.2f, current: %.2f\n",
                                      Max_OpenLots, posStatLots);
-   if(MaxDailyLoss > sigma)
+   if(MaxDailyLoss)
       protectionInfo += StringFormat("Max daily loss: %d, current: %.2f\n",
                                      MaxDailyLoss, dailyLoss);
-   if(Max_Daily_DD > sigma)
+   if(Max_Daily_DD)
       protectionInfo += StringFormat("Max daily drawdown: %.2f%%, current: %.2f%%\n",
                                      Max_Daily_DD, dailyDrawdown);
-   if(Min_Equity > sigma)
+   if(Min_Equity)
       protectionInfo += StringFormat("Min equity: %d, current: %.2f\n",
                                      Min_Equity, AccountInfoDouble(ACCOUNT_EQUITY));
-   if(MaxEquity_DD > sigma)
+   if(MaxEquity_DD)
       protectionInfo += StringFormat("Max equity drawdown: %.2f%%, current: %.2f%%\n",
                                      MaxEquity_DD, equityDrawdownPercent);
-   if(Max_Equity > sigma)
+   if(Max_Equity)
       protectionInfo += StringFormat("Max equity: %d, current: %.2f\n",
                                      Max_Equity, AccountInfoDouble(ACCOUNT_EQUITY));
 
@@ -1061,7 +974,7 @@ string GetProtectionInfo(void)
 //+------------------------------------------------------------------+
 string GetPositionStats(void)
   {
-   const string positionStats = "\n            ..:: Position Stats ::..\n";
+   string positionStats = "\n            ..:: Position Stats ::..\n";
 
    if(posType == OP_FLAT)
       return positionStats +  "Position: no open position";
@@ -1082,15 +995,15 @@ string GetPositionStats(void)
 //+------------------------------------------------------------------+
 string GetRobotStats(void)
   {
-   return "\n            ..:: Trading Stats ::..\n" +
-          "  1-day: " + GetRobotStatsDays(1) + "\n" +
-          "  7-day: " + GetRobotStatsDays(7) + "\n" +
-          "30-day: "  + GetRobotStatsDays(30);
+   return "\n            ..:: Robot Stats ::..\n" +
+          "Today        " + GetRobotStatsDays( 1) + "\n" +
+          "This Week  "   + GetRobotStatsDays( 7) + "\n" +
+          "This Month "   + GetRobotStatsDays(30);
   }
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-string GetRobotStatsDays(const int days)
+string GetRobotStatsDays(int days)
   {
    double grossProfit     = 0;
    double grossLoss       = 0;
@@ -1098,43 +1011,31 @@ string GetRobotStatsDays(const int days)
    double histDealsProfit = 0;
 
    const datetime timeCurrent = TimeCurrent();
-   const datetime timeStart   = timeCurrent - days * PeriodSeconds(PERIOD_D1);
+   const datetime timeStart   = timeCurrent - days*PeriodSeconds(PERIOD_D1);
    HistorySelect(timeStart, timeCurrent);
    const int deals = HistoryDealsTotal();
 
    for(int i = 0; i < deals; i += 1)
      {
       const ulong ticket = HistoryDealGetTicket(i);
-      if(ticket == 0)
-         continue;
-
-      // When we close a position manually it gets dealMagic = 0
+      if(ticket == 0) continue;
       const long dealMagic = HistoryDealGetInteger(ticket, DEAL_MAGIC);
-      if(dealMagic > 0 && dealMagic != Magic_Number)
-         continue;
-
-      if(HistoryDealGetString(ticket, DEAL_SYMBOL) != _Symbol)
-         continue;
-
+      if(dealMagic != Magic_Number && dealMagic != 0) continue;
+      if(HistoryDealGetString (ticket, DEAL_SYMBOL) != _Symbol) continue;
       const long dealType = HistoryDealGetInteger(ticket, DEAL_TYPE);
-      if(dealType != DEAL_TYPE_BUY && dealType != DEAL_TYPE_SELL)
-         continue;
-
+      if(dealType != DEAL_TYPE_BUY && dealType != DEAL_TYPE_SELL) continue;
       const long dealEntry = HistoryDealGetInteger(ticket, DEAL_ENTRY);
-      if(dealEntry != DEAL_ENTRY_OUT)
-         continue;
+      if(dealEntry != DEAL_ENTRY_OUT) continue;
 
-      const double profit = HistoryDealGetDouble(ticket, DEAL_PROFIT) +
-                            HistoryDealGetDouble(ticket, DEAL_SWAP)   +
+      const double profit = HistoryDealGetDouble(ticket, DEAL_PROFIT    ) +
+                            HistoryDealGetDouble(ticket, DEAL_SWAP      ) +
                             HistoryDealGetDouble(ticket, DEAL_COMMISSION);
 
       histDealsProfit += profit;
       histDealsCnt    += 1;
 
-      if(profit > sigma)
-         grossProfit += profit;
-      if(profit < -sigma)
-         grossLoss -= profit;
+      if(profit >  sigma) grossProfit += profit;
+      if(profit < -sigma) grossLoss   -= profit;
      }
 
    const double profitFactor = grossLoss > sigma ? grossProfit / grossLoss : grossProfit;
@@ -1194,7 +1095,7 @@ void RenderStats(const string text)
 void RectLabelCreate(
    const long             chartId    = 0,                 // chart's ID
    const string           name       = "RectLabel",       // label name
-   const int              sub_window = 0,                 // sub-window index
+   const int              sub_window = 0,                 // subwindow index
    const int              x          = 0,                 // X coordinate
    const int              y          = 0,                 // Y coordinate
    const int              width      = 50,                // width
@@ -1234,7 +1135,7 @@ void RectLabelCreate(
 void LabelCreate(
    const long              chartId=0,                // chart's ID
    const string            name="Label",             // label name
-   const int               sub_window=0,             // sub-window index
+   const int               sub_window=0,             // subwindow index
    const int               x=0,                      // X coordinate
    const int               y=0,                      // Y coordinate
    const ENUM_BASE_CORNER  corner=CORNER_LEFT_UPPER, // chart corner for anchoring
@@ -1299,8 +1200,8 @@ void DeleteObjects(void)
   {
    if(ObjectFind(0, "Stats_background") == 0)
       ObjectDelete(0, "Stats_background");
-   maxLabels = MathMax(maxLabels, 100);
-   for(int i = 0; i < maxLabels; i++)
+   maxLabels = MathMax(maxLabels, 35);
+   for(int i = 0; i < maxLabels; i += 1)
      {
       const string objName = "label" + IntegerToString(i);
       if(ObjectFind(0, objName) == 0)
@@ -1360,7 +1261,7 @@ void LoadNews(void)
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-void ParseNewsContent(const string newsContent, string &error)
+void ParseNewsContent(string newsContent, string &error)
   {
    string lines[];
    const int linesLen = StringSplit(newsContent, '\n', lines);
@@ -1489,14 +1390,14 @@ bool NewsIsAcceptedPriority(const NewsRecord &newsRecord)
 //+------------------------------------------------------------------+
 //| Gets the index of an active news or -1                           |
 //+------------------------------------------------------------------+
-int NewsFilterActive(void)
+int NewsFilterActive()
   {
    if(News_Priority == NewsFilter_Disabled)
       return -1;
 
    const datetime timeUtc = TimeGMT();
    const int      newsLen = ArraySize(newsRecords);
-   for(int i = 0; i < newsLen; i++)
+   for(int i = 0; i < newsLen; i += 1)
      {
       const NewsRecord news = newsRecords[i];
       if(!NewsIsAcceptedCurrency(news) || !NewsIsAcceptedPriority(news))
@@ -1518,13 +1419,13 @@ int NewsFilterActive(void)
 //+------------------------------------------------------------------+
 //|                                                                  |
 //+------------------------------------------------------------------+
-void ParseNewsCurrenciesText(void)
+void ParseNewsCurrenciesText()
   {
    string parts[], parsed[];
    const int partsLen = StringSplit(News_Currencies, ',', parts);
    ArrayResize(parsed, partsLen);
    int len = 0;
-   for(int i = 0; i < partsLen; i++)
+   for(int i = 0; i < partsLen; i += 1)
      {
       string part = parts[i];
       StringReplace(part, " ", "");
@@ -1536,9 +1437,9 @@ void ParseNewsCurrenciesText(void)
      }
 
    ArrayResize(newsCurrencies, len);
-   for(int i = 0; i < len; i++)
+   for(int i = 0; i < len; i += 1)
       newsCurrencies[i] = parsed[i];
   }
 //+------------------------------------------------------------------+
-/*STRATEGY MARKET Premium Data; EURUSD; M30 */
-/*STRATEGY CODE {"properties":{"entryLots":0.19,"tradeDirectionMode":0,"oppositeEntrySignal":1,"stopLoss":50,"takeProfit":55,"useStopLoss":true,"useTakeProfit":true,"isTrailingStop":false},"openFilters":[{"name":"Entry Time","listIndexes":[0,0,0,0,0],"numValues":[2,0,23,30,0,0]},{"name":"Envelopes","listIndexes":[5,3,0,0,0],"numValues":[7,0.09,0,0,0,0]},{"name":"DeMarker","listIndexes":[2,0,0,0,0],"numValues":[35,0.5,0,0,0,0]},{"name":"MACD","listIndexes":[0,3,0,0,0],"numValues":[8,25,9,0,0,0]},{"name":"RSI","listIndexes":[2,3,0,0,0],"numValues":[6,50,0,0,0,0]},{"name":"RSI","listIndexes":[6,3,0,0,0],"numValues":[20,30,0,0,0,0]}],"closeFilters":[{"name":"Average True Range","listIndexes":[4,0,0,0,0],"numValues":[39,0.001,0,0,0,0]}]} */
+/*STRATEGY MARKET BlackBull; XAUUSD; M15 */
+/*STRATEGY CODE {"properties":{"entryLots":0.1,"tradeDirectionMode":0,"oppositeEntrySignal":0,"stopLoss":2290,"takeProfit":2935,"useStopLoss":true,"useTakeProfit":true,"isTrailingStop":false},"openFilters":[{"name":"Envelopes","listIndexes":[2,3,0,0,0],"numValues":[30,0.91,0,0,0,0]}],"closeFilters":[{"name":"Awesome Oscillator","listIndexes":[4,0,0,0,0],"numValues":[33.9,0,0,0,0,0]}]} */
